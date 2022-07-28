@@ -13,7 +13,7 @@ const swaggerDocument = YAML.load('./swagger.yaml');
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-// app.use(cors());
+app.use(cors());
 
 //regular middleware
 app.use(express.json());
