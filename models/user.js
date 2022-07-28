@@ -49,36 +49,43 @@ const userSchema = new mongoose.Schema({
   },
 });
 
+//encrypt password before save - HOOKS
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {
-    next();
+    return next();
   }
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
   next();
 });
 
+// validate the password with passed on user password
 userSchema.methods.isValidatedPassword = async function (password) {
   return await bcrypt.compare(password, this.password);
 };
 
+//create and return jwt token
 userSchema.methods.getJwtToken = function () {
   return jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRY,
   });
 };
 
+//generate forgot password token (string)
 userSchema.methods.getForgotPasswordToken = function () {
-  const token = crypto.randomBytes(20).toString('hex');
+  // generate a long and randomg string
+  const forgotToken = crypto.randomBytes(20).toString('hex');
 
+  // getting a hash - make sure to get a hash on backend
   this.forgotPasswordToken = crypto
     .createHash('sha256')
-    .update(token)
+    .update(forgotToken)
     .digest('hex');
 
+  //time of token
   this.forgotPasswordExpiry = Date.now() + 20 * 60 * 1000;
 
-  return token;
+  return forgotToken;
 };
 
 module.exports = mongoose.model('User', userSchema);
