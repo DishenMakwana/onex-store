@@ -36,6 +36,10 @@ const productSchema = new mongoose.Schema({
       message: 'Please select a valid category',
     },
   },
+  stock: {
+    type: Number,
+    required: [true, 'Product stock is required'],
+  },
   brand: {
     type: String,
     required: [true, 'Product brand is required'],

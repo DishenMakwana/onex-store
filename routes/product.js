@@ -9,6 +9,7 @@ const {
   adminDeleteOneProduct,
   deleteReview,
   getOnlyReviewsForOneProduct,
+  addReview,
 } = require('../controllers/productController');
 const { isLoggedIn, customRole } = require('../middlewares/user');
 
