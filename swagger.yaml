@@ -24,7 +24,7 @@ servers:
       url:
         enum:
           - localhost:4000
-          - onex.herokuapp.com
+          - api-onex.herokuapp.com
         default: localhost:4000
       protocol:
         enum:
