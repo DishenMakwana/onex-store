@@ -4,7 +4,7 @@ const CustomError = require('../utils/customError');
 const cookieToken = require('../utils/cookieToken');
 const crypto = require('crypto');
 const mailHelper = require('../utils/emailHelper');
-const cloudinary = require('cloudinary').v2;
+const cloudinary = require('cloudinary');
 
 exports.signup = BigPromise(async (req, res, next) => {
   if (!req.files) {
@@ -19,7 +19,7 @@ exports.signup = BigPromise(async (req, res, next) => {
 
   let file = req.files.photo;
 
-  const result = await cloudinary.uploader.upload(file.tempFilePath, {
+  const result = await cloudinary.v2.uploader.upload(file.tempFilePath, {
     folder: 'users',
     width: 150,
     crop: 'scale',
@@ -182,13 +182,16 @@ exports.updateUserDetails = BigPromise(async (req, res, next) => {
 
     const imageId = user.photo.id;
 
-    await cloudinary.uploader.destroy(imageId);
+    await cloudinary.v2.uploader.destroy(imageId);
 
-    const res = await cloudinary.uploader.upload(req.files.photo.tempFilePath, {
-      folder: 'users',
-      width: 150,
-      crop: 'scale',
-    });
+    const res = await cloudinary.v2.uploader.upload(
+      req.files.photo.tempFilePath,
+      {
+        folder: 'users',
+        width: 150,
+        crop: 'scale',
+      }
+    );
 
     newData.photo = {
       id: res.public_id,
@@ -246,7 +249,7 @@ exports.adminDeleteOneUser = BigPromise(async (req, res, next) => {
 
   const imageId = user.photo.id;
 
-  await cloudinary.uploader.destroy(imageId);
+  await cloudinary.v2.uploader.destroy(imageId);
 
   await user.remove();
 
