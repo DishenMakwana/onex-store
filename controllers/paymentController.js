@@ -12,20 +12,22 @@ exports.captureStripePayment = BigPromise(async (req, res, next) => {
   const paymentIntent = await stripe.paymentIntents.create({
     amount: req.body.amount,
     currency: 'inr',
-    metadata: {
-      integration_check: 'accept_a_payment',
-    },
+
+    //optional
+    metadata: { integration_check: 'accept_a_payment' },
   });
 
   res.status(200).json({
     success: true,
+    amount: req.body.amount,
     client_secret: paymentIntent.client_secret,
+    //you can optionally send id as well
   });
 });
 
 exports.sendRazorpayKey = BigPromise(async (req, res, next) => {
   res.status(200).json({
-    stripeKey: process.env.RAZORPAY_API_KEY,
+    razorpayKey: process.env.RAZORPAY_API_KEY,
   });
 });
 
@@ -36,7 +38,7 @@ exports.captureRazorpayPayment = BigPromise(async (req, res, next) => {
   });
 
   const options = {
-    amount: req.body.amount,
+    amount: req.body.amount, // amount in the smallest currency unit
     currency: 'INR',
   };
 

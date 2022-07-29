@@ -74,15 +74,105 @@ exports.getOneProduct = BigPromise(async (req, res, next) => {
   const product = await Product.findById(req.params.id);
 
   if (!product) {
-    return next(new CustomError('Product not found', 404));
+    return next(new CustomError('No product found with this id', 401));
   }
-
   res.status(200).json({
     success: true,
     product,
   });
 });
 
+exports.addReview = BigPromise(async (req, res, next) => {
+  const { rating, comment, productId } = req.body;
+
+  const review = {
+    user: req.user._id,
+    name: req.user.name,
+    rating: Number(rating),
+    comment,
+  };
+
+  const product = await Product.findById(productId);
+
+  const AlreadyReview = product.reviews.find((rev) => {
+    rev.user.toString() === req.user._id.toString();
+  });
+
+  if (AlreadyReview) {
+    product.reviews.forEach((review) => {
+      if (review.user.toString() === req.user._id.toString()) {
+        review.rating = Number(rating);
+        review.comment = comment;
+      }
+    });
+  } else {
+    product.reviews.push(review);
+    product.numberOfReviews = product.reviews.length;
+  }
+
+  // adjust ratings
+
+  product.ratings =
+    product.reviews.reduce((acc, item) => item.rating + acc, 0) /
+    product.reviews.length;
+
+  //save
+
+  await product.save({ validateBeforeSave: false });
+
+  res.status(200).json({
+    success: true,
+  });
+});
+
+exports.deleteReview = BigPromise(async (req, res, next) => {
+  const { productId } = req.query;
+
+  const product = await Product.findById(productId);
+
+  const reviews = product.reviews.filter((rev) => {
+    rev.user.toString() === req.user._id.toString();
+  });
+
+  const numberOfReviews = reviews.length;
+
+  // adjust ratings
+
+  product.ratings =
+    product.reviews.reduce((acc, item) => item.rating + acc, 0) /
+    product.reviews.length;
+
+  //update the product
+
+  await Product.findByIdAndUpdate(
+    productId,
+    {
+      reviews,
+      ratings,
+      numberOfReviews,
+    },
+    {
+      new: true,
+      runValidators: true,
+      useFindAndModify: false,
+    }
+  );
+
+  res.status(200).json({
+    success: true,
+  });
+});
+
+exports.getOnlyReviewsForOneProduct = BigPromise(async (req, res, next) => {
+  const product = await Product.findById(req.query.id);
+
+  res.status(200).json({
+    success: true,
+    reviews: product.reviews,
+  });
+});
+
+// admin only controllers
 exports.adminGetAllProduct = BigPromise(async (req, res, next) => {
   const products = await Product.find();
 
@@ -98,13 +188,14 @@ exports.adminUpdateOneProduct = BigPromise(async (req, res, next) => {
   if (!product) {
     return next(new CustomError('No product found with this id', 401));
   }
-
   let imagesArray = [];
 
   if (req.files) {
     //destroy the existing image
     for (let index = 0; index < product.photos.length; index++) {
-      await cloudinary.v2.uploader.destroy(product.photos[index].id);
+      const res = await cloudinary.v2.uploader.destroy(
+        product.photos[index].id
+      );
     }
 
     for (let index = 0; index < req.files.photos.length; index++) {
@@ -145,97 +236,13 @@ exports.adminDeleteOneProduct = BigPromise(async (req, res, next) => {
 
   //destroy the existing image
   for (let index = 0; index < product.photos.length; index++) {
-    await cloudinary.v2.uploader.destroy(product.photos[index].id);
+    const res = await cloudinary.v2.uploader.destroy(product.photos[index].id);
   }
 
   await product.remove();
 
   res.status(200).json({
     success: true,
-    message: 'Product deleted',
-  });
-});
-
-exports.addReview = BigPromise(async (req, res, next) => {
-  const { rating, comment, productId } = req.body;
-
-  const review = {
-    user: req.user._id,
-    name: req.user.name,
-    rating: Number(rating),
-    comment,
-  };
-
-  const product = await Product.findById(productId);
-
-  const AlreadyReview = product.reviews.find((rev) => {
-    rev.user.toString() === req.user._id.toString();
-  });
-
-  if (AlreadyReview) {
-    product.reviews.forEach((review) => {
-      if (review.user.toString() === req.user._id.toString()) {
-        review.rating = Number(rating);
-        review.comment = comment;
-      }
-    });
-  } else {
-    product.reviews.push(review);
-    product.numberOfReviews = product.reviews.length;
-  }
-
-  product.ratings =
-    product.reviews.reduce((acc, item) => {
-      item.rating + acc, 0;
-    }) / product.reviews.length;
-
-  await product.save({ validateBeforeSave: false });
-
-  res.status(200).json({
-    success: true,
-  });
-});
-
-exports.deleteReview = BigPromise(async (req, res, next) => {
-  const { productId } = req.query;
-
-  const product = await Product.findById(productId);
-
-  const reviews = product.reviews.filter((rev) => {
-    rev.user.toString() === req.user._id.toString();
-  });
-
-  const numberOfReviews = reviews.length;
-
-  product.ratings =
-    product.reviews.reduce((acc, item) => {
-      item.rating + acc, 0;
-    }, 0) / product.reviews.length;
-
-  await Product.findByIdAndUpdate(
-    productId,
-    {
-      reviews,
-      rating,
-      numberOfReviews,
-    },
-    {
-      new: true,
-      runValidators: true,
-      useFindAndModify: false,
-    }
-  );
-
-  res.status(200).json({
-    success: true,
-  });
-});
-
-exports.getOnlyReviewsForOneProduct = BigPromise(async (req, res, next) => {
-  const product = await Product.findById(req.query.id);
-
-  res.status(200).json({
-    success: true,
-    reviews: product.reviews,
+    message: 'Product was deleted !',
   });
 });

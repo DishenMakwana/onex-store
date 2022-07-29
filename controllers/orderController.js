@@ -5,16 +5,16 @@ const BigPromise = require('../middlewares/bigPromise');
 exports.createOrder = BigPromise(async (req, res, next) => {
   const {
     shippingInfo,
-    orderItem,
+    orderItems,
     paymentInfo,
     taxAmount,
     shippingAmount,
     totalAmount,
   } = req.body;
 
-  const order = Order.create({
+  const order = await Order.create({
     shippingInfo,
-    orderItem,
+    orderItems,
     paymentInfo,
     taxAmount,
     shippingAmount,
@@ -22,7 +22,7 @@ exports.createOrder = BigPromise(async (req, res, next) => {
     user: req.user._id,
   });
 
-  res.status(201).json({
+  res.status(200).json({
     success: true,
     order,
   });
@@ -47,7 +47,7 @@ exports.getOneOrder = BigPromise(async (req, res, next) => {
 });
 
 exports.getLoggedInOrders = BigPromise(async (req, res, next) => {
-  const order = Order.find({ user: req.user._id });
+  const order = await Order.find({ user: req.user._id });
 
   if (!order) {
     return next(

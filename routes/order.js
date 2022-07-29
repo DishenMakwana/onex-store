@@ -5,18 +5,20 @@ const {
   getLoggedInOrders,
   adminUpdateOrder,
   adminDeleteOrder,
+  adminGetAllOrders,
 } = require('../controllers/orderController');
 const { isLoggedIn, customRole } = require('../middlewares/user');
 
 const router = express.Router();
 
 router.route('/order/create').post(isLoggedIn, createOrder);
-router.route('/order/:id').post(isLoggedIn, getOneOrder);
-router.route('/myorder').post(isLoggedIn, getLoggedInOrders);
+router.route('/order/:id').get(isLoggedIn, getOneOrder);
+router.route('/myorder').get(isLoggedIn, getLoggedInOrders);
 
+//admin routes
 router
   .route('/admin/orders')
-  .post(isLoggedIn, customRole('admin'), getLoggedInOrders);
+  .get(isLoggedIn, customRole('admin'), adminGetAllOrders);
 router
   .route('/admin/order/:id')
   .put(isLoggedIn, customRole('admin'), adminUpdateOrder);

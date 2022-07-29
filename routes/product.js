@@ -23,7 +23,7 @@ router.route('/review').put(isLoggedIn, addReview);
 router.route('/review').delete(isLoggedIn, deleteReview);
 router.route('/reviews').get(isLoggedIn, getOnlyReviewsForOneProduct);
 
-// admin
+//admin routes
 router
   .route('/admin/product/add')
   .post(isLoggedIn, customRole('admin'), addProduct);
