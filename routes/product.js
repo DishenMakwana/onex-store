@@ -7,6 +7,8 @@ const {
   getOneProduct,
   adminUpdateOneProduct,
   adminDeleteOneProduct,
+  deleteReview,
+  getOnlyReviewsForOneProduct,
 } = require('../controllers/productController');
 const { isLoggedIn, customRole } = require('../middlewares/user');
 
@@ -16,6 +18,9 @@ const router = express.Router();
 router.route('/testProduct').get(testProduct);
 router.route('/products').get(getAllProduct);
 router.route('/product/:id').get(getOneProduct);
+router.route('/review').put(isLoggedIn, addReview);
+router.route('/review').delete(isLoggedIn, deleteReview);
+router.route('/reviews').get(isLoggedIn, getOnlyReviewsForOneProduct);
 
 // admin
 router
