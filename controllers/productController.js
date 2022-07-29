@@ -2,7 +2,7 @@ const Product = require('../models/product');
 const BigPromise = require('../middlewares/bigPromise');
 const CustomError = require('../utils/customError');
 const WhereClause = require('../utils/whereClause');
-const cloudinary = require('cloudinary').v2;
+const cloudinary = require('cloudinary');
 
 exports.testProduct = BigPromise(async (req, res) => {
   res.status(200).json({
@@ -12,16 +12,17 @@ exports.testProduct = BigPromise(async (req, res) => {
 });
 
 exports.addProduct = BigPromise(async (req, res, next) => {
+  // images
   let imageArray = [];
 
   if (!req.files) {
-    return next(new CustomError('image is required', 401));
+    return next(new CustomError('images are required', 401));
   }
 
   if (req.files) {
-    for (let idx = 0; idx < req.files.length; idx++) {
-      let result = await cloudinary.uploader.upload(
-        req.files.photos[idx].tempFilePath,
+    for (let index = 0; index < req.files.photos.length; index++) {
+      let result = await cloudinary.v2.uploader.upload(
+        req.files.photos[index].tempFilePath,
         {
           folder: 'products',
         }
@@ -47,14 +48,16 @@ exports.addProduct = BigPromise(async (req, res, next) => {
 
 exports.getAllProduct = BigPromise(async (req, res, next) => {
   const resultPerPage = 6;
-  const totalCountProduct = await Product.countDocuments();
+  const totalcountProduct = await Product.countDocuments();
 
-  const productsObj = new WhereClause(await Product.find({}), req.query)
+  const productsObj = new WhereClause(Product.find(), req.query)
     .search()
     .filter();
 
   let products = await productsObj.base;
   const filteredProductNumber = products.length;
+
+  //products.limit().skip()
 
   productsObj.pager(resultPerPage);
   products = await productsObj.base.clone();
@@ -63,6 +66,6 @@ exports.getAllProduct = BigPromise(async (req, res, next) => {
     success: true,
     products,
     filteredProductNumber,
-    totalCountProduct,
+    totalcountProduct,
   });
 });
